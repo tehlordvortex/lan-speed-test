@@ -25,8 +25,8 @@ There are two binaries built: `lan-speed-test` and `speedtestd`.
 
 ## TODO
 
-- [] Have `lan-speed-test` automatically try and find a running `speedtestd` on the available network interfaces, if one isn't provided.
-- [] Make this work on Windows, by generating the data to stream to the client somehow.
+- [ ] Have `lan-speed-test` automatically try and find a running `speedtestd` on the available network interfaces, if one isn't provided.
+- [ ] Make this work on Windows, by generating the data to stream to the client somehow.
 
 ## Troubleshooting
 
