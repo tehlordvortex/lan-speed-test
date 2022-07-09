@@ -4,11 +4,16 @@ use rocket::{
 use std::{io, net::Ipv4Addr};
 use tokio::fs::File;
 
+use crate::broadcast_service;
+
 pub fn start_speed_test_server(port: Option<String>) -> Rocket<Build> {
     let port = port
         .unwrap_or(String::from("30000"))
         .parse()
         .expect("Port should be numerical");
+    if let Err(err) = broadcast_service(port) {
+        println!("WARNING: Failed to start mDNS service: {err}");
+    }
     rocket::build()
         .configure(Config {
             port,

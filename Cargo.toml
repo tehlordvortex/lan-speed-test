@@ -6,11 +6,17 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.58"
+hostname = "0.3.1"
+log = "0.4.17"
+mdns-sd = "0.5.3"
 num_cpus = "1.13.1"
+pnet_datalink = "0.31.0"
+rand = "0.8.5"
 # Note: Using rustls because I couldn't be bothered to figure
 # out how to get OpenSSL to work for the Android cross-compilation
 reqwest = { version = "0.11.11", features = ["stream", "rustls-tls"], default-features = false }
 rocket = "0.5.0-rc.2"
+simplelog = "0.12.0"
 tokio = { version = "1.19.2", features = ["full"] }
 tokio-util = { version = "0.7.3", features = ["io"] }
-tracing-subscriber = "0.3.14"

@@ -6,10 +6,13 @@ use std::{
     sync::{Arc, Mutex},
 };
 use tokio::{
+    net::TcpStream,
     process::Command,
     sync::mpsc,
     time::{sleep, Duration, Instant},
 };
+
+use crate::find_service;
 
 const CHUNK_LIMITS: usize = 25;
 const MILLISECONDS_BETWEEN_CHECKS: u64 = 250;
@@ -22,10 +25,11 @@ struct SpeedTestState {
     pub speeds: Vec<f64>,
     pub last_speed: f64,
     pub highest_speed: f64,
+    pub server_addr: Url,
 }
 
-impl Default for SpeedTestState {
-    fn default() -> Self {
+impl SpeedTestState {
+    fn new(server_addr: Url) -> Self {
         Self {
             total: 0,
             total_since_last_check: 0,
@@ -33,11 +37,21 @@ impl Default for SpeedTestState {
             speeds: vec![],
             last_speed: 0.0,
             highest_speed: 0.0,
+            server_addr,
         }
     }
 }
 
-pub async fn run_speed_test(server_ip: String) -> Result<(), Box<dyn std::error::Error>> {
+async fn try_connect(server_addresses: Vec<SocketAddr>) -> anyhow::Result<String> {
+    let socket = TcpStream::connect(&server_addresses[..]).await?;
+    Ok(socket.peer_addr()?.to_string())
+}
+
+pub async fn run_speed_test(server_ip: Option<String>) -> anyhow::Result<()> {
+    let server_ip = match server_ip {
+        Some(ip) => ip,
+        None => try_connect(find_service(None).await?).await?,
+    };
     let maybe_ip = server_ip.parse::<SocketAddr>();
 
     let mut url: Url = if let Ok(ip) = maybe_ip {
@@ -49,9 +63,9 @@ pub async fn run_speed_test(server_ip: String) -> Result<(), Box<dyn std::error:
         url.set_path("/stream");
     }
     println!("Connecting to {}...", url);
-    let req = reqwest::get(url).await?;
+    let req = reqwest::get(url.clone()).await?;
     let body = req.bytes_stream();
-    let state = Arc::new(Mutex::new(SpeedTestState::default()));
+    let state = Arc::new(Mutex::new(SpeedTestState::new(url)));
     let (tx, mut rx) = mpsc::channel::<u64>(1000);
 
     tokio::spawn({
@@ -96,6 +110,7 @@ pub async fn run_speed_test(server_ip: String) -> Result<(), Box<dyn std::error:
                     state.speeds.remove(0);
                 }
 
+                println!("Connected to {}", state.server_addr);
                 if state.speeds.len() < CHUNK_LIMITS {
                     println!("Gathering measurements...");
                 } else {
@@ -107,7 +122,7 @@ pub async fn run_speed_test(server_ip: String) -> Result<(), Box<dyn std::error:
                       average_speed,
                       state.last_speed.as_mebibytes(),
                       state.highest_speed.as_mebibytes(),
-                      (state.total / 1.mebibytes()).mebibytes()
+                      (state.total / 1.kibibytes()).kibibytes()
                     );
                 }
             }
