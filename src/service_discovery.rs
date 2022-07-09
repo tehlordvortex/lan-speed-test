@@ -47,7 +47,7 @@ pub async fn find_service(timeout_in_secs: Option<u32>) -> anyhow::Result<Vec<So
             match receiver.recv_async().await {
                 Ok(event) => match event {
                     ServiceEvent::ServiceResolved(info) => {
-                        println!("Found one: {}", info.get_fullname());
+                        info!("Found an instance: {}", info.get_fullname());
                         let port = info.get_port();
                         let socket_addresses = info
                             .get_addresses()
@@ -56,9 +56,7 @@ pub async fn find_service(timeout_in_secs: Option<u32>) -> anyhow::Result<Vec<So
                             .collect();
                         break Ok(socket_addresses);
                     }
-                    other_event => {
-                        println!("{:#?}", other_event);
-                    }
+                    _ => {}
                 },
                 Err(err) => {
                     break Err(err);
