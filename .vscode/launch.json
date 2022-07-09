@@ -1,0 +1,25 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug lan-speed-test",
+      "program": "${workspaceFolder}/target/debug/lan-speed-test",
+      "args": ["127.0.0.1:30000"],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "build:debug"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug speedtestd",
+      "program": "${workspaceFolder}/target/debug/speedtestd",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "build:release"
+    }
+  ]
+}

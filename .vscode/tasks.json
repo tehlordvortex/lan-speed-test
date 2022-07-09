@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build:debug",
+      "command": "cargo",
+      "type": "shell",
+      "args": ["build"],
+      "group": "build"
+    },
+    {
+      "label": "build:release",
+      "command": "cargo",
+      "type": "shell",
+      "args": ["build", "--release"],
+      "group": "build"
+    }
+  ]
+}
