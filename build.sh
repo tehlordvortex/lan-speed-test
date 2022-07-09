@@ -15,7 +15,7 @@ fi
 if [ x"$SKIP_ANDROID_BUILD" != "x1" ]; then
 	echo "Cross-compiling for Android (binaries can be ran under Termux)..."
 	export AR=$ANDROID_NDK/toolchains/llvm/prebuilt/$HOST_ARCH/bin/llvm-ar
-	export CC=$ANDROID_NDK/toolchains/llvm/prebuilt/$HOST_ARCH/bin/aarch64-linux-android23-clang
+	export CC=$ANDROID_NDK/toolchains/llvm/prebuilt/$HOST_ARCH/bin/aarch64-linux-android29-clang
 	export CARGO_TARGET_AARCH64_LINUX_ANDROID_AR=$AR
 	export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$CC
 	cargo build --target=aarch64-linux-android --release
