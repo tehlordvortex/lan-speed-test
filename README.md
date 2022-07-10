@@ -21,12 +21,16 @@ you@YourPC:~ ANDROID_NDK=$ANDROID_HOME/ndk/[VERSION] HOST_ARCH=darwin-x86_64 SKI
 There are two binaries built: `lan-speed-test` and `speedtestd`.
 
 - `speedtestd` is the server and runs on the provided port (default `30000`) and exposes a `/stream` endpoint that streams `/dev/zero` to the client. (e.g. `speedtestd 42069`).
-- `lan-speed-test` is the client, which connects to the server and measures fast the data comes in. You can invoke it with either an IP:PORT combo (e.g. `lan-speed-test 127.0.0.1:42069`), or a URL (which may or may not have the `/stream` path, e.g. `lan-speed-test https://my-server-url.some-provider.cloud`)
+- `lan-speed-test` is the client, which connects to the server and measures fast the data comes in. You can invoke it with either an IP:PORT combo (e.g. `lan-speed-test 127.0.0.1:42069`), or a URL (which may or may not have the `/stream` path, e.g. `lan-speed-test https://my-server-url.some-provider.cloud`), or nothing it all, in which case, it'll try to find a running `speedtestd` instance on the available network interfaces and connect to the first one it encounters.
+  - N/B: The auto discovery process uses [MDNS](https://en.wikipedia.org/wiki/Multicast_DNS), which should work fine on Windows(?) and MacOS, but you might need to set up [Avahi](https://wiki.archlinux.org/title/Avahi) on Linux.
 
 ## TODO
 
-- [ ] Have `lan-speed-test` automatically try and find a running `speedtestd` on the available network interfaces, if one isn't provided.
-- [ ] Make this work on Windows, by generating the data to stream to the client somehow.
+- [x] ~~Have `lan-speed-test` automatically try and find a running `speedtestd` on the available network interfaces, if one isn't provided.~~ Implemented using [mdns_sd](https://crates.io/crates/mdns-sd).
+- [x] ~~Make this work on Windows, by generating the data to stream to the client somehow.~~ Implemented a `Stream` for this, so it should work now. Haven't actually tried building on Windows, though.
+- [ ] A timeout for the server discovery process
+- [ ] A time limit for the speed test
+- [ ] A mobile app (Flutter / React Native?)
 
 ## Troubleshooting
 
