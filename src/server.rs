@@ -1,8 +1,11 @@
 use rocket::{
-    data::Limits, data::ToByteUnit, response::stream::ReaderStream, Build, Config, Rocket,
+    data::Limits,
+    data::ToByteUnit,
+    futures::{FutureExt, Stream},
+    response::stream::ByteStream,
+    Build, Config, Rocket, Shutdown,
 };
-use std::{io, net::Ipv4Addr};
-use tokio::fs::File;
+use std::net::Ipv4Addr;
 
 use crate::broadcast_service;
 
@@ -25,8 +28,33 @@ pub fn start_speed_test_server(port: Option<String>) -> Rocket<Build> {
 }
 
 #[get("/stream")]
-async fn stream_nonsense() -> io::Result<ReaderStream![File]> {
-    let dev_zero = File::open("/dev/zero").await?;
+async fn stream_nonsense(shutdown: Shutdown) -> ByteStream![Vec<u8>] {
+    let stream = NonsenseStream { shutdown };
+    ByteStream(stream)
+}
 
-    Ok(ReaderStream::one(dev_zero))
+struct NonsenseStream {
+    shutdown: Shutdown,
+}
+
+impl NonsenseStream {
+    fn generate_nonsense() -> Vec<u8> {
+        // TODO: Is there a better way to do this? How does this affect memory usage and perf?
+        const BUF_SIZE: usize = 1024 * 64; // 64kiB
+        vec![0; BUF_SIZE]
+    }
+}
+
+impl Stream for NonsenseStream {
+    type Item = Vec<u8>;
+    fn poll_next(
+        mut self: std::pin::Pin<&mut Self>,
+        _cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Option<Self::Item>> {
+        if (&mut self.shutdown).now_or_never().is_some() {
+            std::task::Poll::Ready(None)
+        } else {
+            std::task::Poll::Ready(Some(Self::generate_nonsense()))
+        }
+    }
 }
