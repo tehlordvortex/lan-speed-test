@@ -8,9 +8,8 @@ struct CliArgs {
     #[clap(short, long, value_parser, default_value_t = 60)]
     timeout: u64,
     /// Duration in seconds for the test.
-    /// The test will run until you terminate the program if not specified
-    #[clap(short, long, value_parser)]
-    duration: Option<u64>,
+    #[clap(short, long, value_parser, default_value_t = 30)]
+    duration: u64,
     /// The IP:PORT address of the server or a URL (e.g. http://my-cloud.provider.somewhere).
     /// If a path segement is not included, it defaults to /stream
     #[clap(value_parser)]
