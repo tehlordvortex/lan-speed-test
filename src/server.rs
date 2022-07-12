@@ -1,3 +1,4 @@
+use log::error;
 use rocket::{
     data::Limits,
     data::ToByteUnit,
@@ -15,7 +16,7 @@ pub fn start_speed_test_server(port: Option<String>) -> Rocket<Build> {
         .parse()
         .expect("Port should be numerical");
     if let Err(err) = broadcast_service(port) {
-        println!("WARNING: Failed to start mDNS service: {err}");
+        error!("Failed to start mDNS service, this instance WILL NOT be auto-discoverable: {err}");
     }
     rocket::build()
         .configure(Config {
