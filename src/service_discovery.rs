@@ -4,8 +4,18 @@ use log::info;
 use mdns_sd::{ServiceDaemon, ServiceEvent, ServiceInfo};
 use pnet_datalink as datalink;
 use rand::prelude::*;
+use tokio::time::{sleep, Duration};
 
 const SERVICE_TYPE: &str = "_speedtestd._tcp.local.";
+
+#[derive(Debug)]
+struct DiscoveryTimeoutError {}
+impl std::error::Error for DiscoveryTimeoutError {}
+impl std::fmt::Display for DiscoveryTimeoutError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Timeout while trying to discover speed test servers.")
+    }
+}
 
 pub fn broadcast_service(port: u16) -> anyhow::Result<()> {
     let mdns = ServiceDaemon::new()?;
@@ -36,13 +46,12 @@ pub fn broadcast_service(port: u16) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn find_service(timeout_in_secs: Option<u32>) -> anyhow::Result<Vec<SocketAddr>> {
-    // TODO: Timeout so we don't just keep searching forever?
-    let _timeout_in_secs = timeout_in_secs.unwrap_or(60);
+pub async fn find_service(timeout_in_secs: Option<u64>) -> anyhow::Result<Vec<SocketAddr>> {
+    let timeout_in_secs = timeout_in_secs.unwrap_or(60);
     let mdns = ServiceDaemon::new()?;
     println!("Searching for speedtestd on available networks...");
     let receiver = mdns.browse(SERVICE_TYPE)?;
-    let addresses = tokio::spawn(async move {
+    let find_addresses = tokio::spawn(async move {
         loop {
             match receiver.recv_async().await {
                 Ok(event) => match event {
@@ -59,12 +68,23 @@ pub async fn find_service(timeout_in_secs: Option<u32>) -> anyhow::Result<Vec<So
                     _ => {}
                 },
                 Err(err) => {
-                    break Err(err);
+                    break Err(err.into());
                 }
             }
         }
-    })
-    .await??;
+    });
+    let timeout = tokio::spawn(async move {
+        sleep(Duration::from_secs(timeout_in_secs)).await;
+        Err((DiscoveryTimeoutError {}).into())
+    });
+    let maybe_addresses = tokio::select! {
+      addresses = find_addresses => {
+        addresses?
+      }
+      err = timeout => {
+        err?
+      }
+    };
 
-    Ok(addresses)
+    maybe_addresses
 }

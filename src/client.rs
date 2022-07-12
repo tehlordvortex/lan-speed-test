@@ -47,10 +47,15 @@ async fn try_connect(server_addresses: Vec<SocketAddr>) -> anyhow::Result<String
     Ok(socket.peer_addr()?.to_string())
 }
 
-pub async fn run_speed_test(server_ip: Option<String>) -> anyhow::Result<()> {
-    let server_ip = match server_ip {
+pub async fn run_speed_test(
+    server_addr: Option<String>,
+    discovery_timeout: Option<u64>,
+    // TODO: Stop the speed test after {duration} seconds, if provided
+    _duration: Option<u64>,
+) -> anyhow::Result<()> {
+    let server_ip = match server_addr {
         Some(ip) => ip,
-        None => try_connect(find_service(None).await?).await?,
+        None => try_connect(find_service(discovery_timeout).await?).await?,
     };
     let maybe_ip = server_ip.parse::<SocketAddr>();
 

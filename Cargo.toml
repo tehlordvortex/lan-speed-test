@@ -2,11 +2,14 @@
 name = "lan-speed-test"
 version = "0.1.0"
 edition = "2021"
+description = "A speed test tool for LANs"
+authors = ["tehlordvortex"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 anyhow = "1.0.58"
+clap = { version = "3.2.10", features = ["derive"] }
 hostname = "0.3.1"
 log = "0.4.17"
 mdns-sd = "0.5.3"
